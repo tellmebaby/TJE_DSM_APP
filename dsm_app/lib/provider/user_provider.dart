@@ -27,8 +27,8 @@ class UserProvider extends ChangeNotifier {
   /// 
   /// 2. jwt 토큰을 SecureStorage 에 저장
   Future<void> login(String username, String password) async {
-    const url = 'http://localhost:8080/login';
-    // const url = 'http://10.0.2.2:8080/login';
+    // const url = 'http://localhost:8080/login';
+    const url = 'http://10.0.2.2:8080/login';
     final requestUrl = Uri.parse('$url?email=$username&password=$password');
     try {
       // 로그인 요청
@@ -76,8 +76,8 @@ class UserProvider extends ChangeNotifier {
   /// 2. 클라이언트 ⬅ 👩‍💼👨‍💼
   /// 3. 👩‍💼👨‍💼(userInfo) ➡ _userInfo [provider] 저장
   Future<void> getUserInfo() async {
-    final url = 'http://localhost:8080/users/info';
-    // final url = 'http://10.0.2.2:8080/users/info';
+    // final url = 'http://localhost:8080/users/info';
+    final url = 'http://10.0.2.2:8080/users/info';
     try {
       // 저장된 jwt 가져오기
       String? token = await storage.read(key: 'jwtToken');

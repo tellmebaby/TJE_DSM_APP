@@ -15,10 +15,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // FlutterSecureStorage : 안전한 저장소
   final storage = const FlutterSecureStorage();
   String jwtToken = "";
   List<StarCard> starCards = [];
+  final Map<int, TextEditingController> _commentControllers = {};
 
   @override
   void initState() {
@@ -28,17 +28,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> loadJwtToken() async {
-    // 저장된 JWT 토큰 읽기
     String? token = await storage.read(key: 'jwtToken');
 
-    // 저장된 토큰이 없으면 ➡ 로그인 화면으로
     if (token == null || token == '') {
       print('미리 저장된 jwt 토큰 없음');
       print('로그인 화면으로 이동...');
       Navigator.pushReplacementNamed(context, '/login');
       return;
     }
-    // 저장된 토큰이 있으면 ➡ 서버로 사용자 정보 요청
 
     setState(() {
       jwtToken = token ?? "";
@@ -47,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> fetchStarCards() async {
     final response = await http.get(
-      Uri.parse('http://localhost:8080/starCard/List'),
+      Uri.parse('http://10.0.2.2:8080/starCard/List'),
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -57,6 +54,10 @@ class _HomeScreenState extends State<HomeScreen> {
       List<dynamic> data = json.decode(utf8.decode(response.bodyBytes))['starList'];
       setState(() {
         starCards = data.map((item) => StarCard.fromJson(item)).toList();
+        _commentControllers.clear();
+        for (int i = 0; i < starCards.length; i++) {
+          _commentControllers[i] = TextEditingController();
+        }
       });
     } else {
       throw Exception('Failed to load star cards');
@@ -67,11 +68,19 @@ class _HomeScreenState extends State<HomeScreen> {
     await storage.write(key: 'jwtToken', value: token);
   }
 
+  Future<void> addComment(int index, String comment) async {
+    // 서버로 덧글을 보내는 로직을 구현해야 합니다.
+    // 현재는 콘솔에 덧글을 출력하고 카드의 덧글 리스트에 추가합니다.
+    print('Adding comment to card $index: $comment');
+
+    setState(() {
+      starCards[index].comments?.add(comment);
+      _commentControllers[index]?.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // listen: (provider 구독여부)
-    // - true : provider 에서 notifyListeners() 호출 시, consumer 리렌더링 ⭕
-    // - false : provider 에서 notifyListeners() 호출 시, consumer 리렌더링 ❌
     UserProvider userProvider = Provider.of<UserProvider>(context, listen: true);
 
     return Scaffold(
@@ -88,20 +97,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 IconButton(
                   icon: Icon(Icons.search, color: Colors.white),
                   onPressed: () {
-                    // Implement search action
+                    // 검색 액션 구현
                   },
                 ),
                 userProvider.isLogin
                     ? PopupMenuButton<String>(
                         icon: CircleAvatar(
-                          backgroundImage: NetworkImage('http://localhost:8080/file/img/1'),
+                          backgroundImage: NetworkImage('http://10.0.2.2:8080/file/img/1'),
                         ),
                         onSelected: (value) {
                           if (value == 'logout') {
                             print('로그아웃 처리...');
                             userProvider.logout();
                           } else if (value == 'mypage') {
-                            // Implement navigation to My Page
+                            // 마이 페이지로 이동 구현
                           }
                         },
                         itemBuilder: (BuildContext context) {
@@ -126,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 IconButton(
                   icon: Icon(Icons.menu, color: Colors.white),
                   onPressed: () {
-                    // Implement menu action
+                    // 메뉴 액션 구현
                   },
                 ),
               ],
@@ -140,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
           itemCount: starCards.length,
           itemBuilder: (context, index) {
             final card = starCards[index];
-            final imgUrl = 'http://localhost:8080/file/img/${card.imgNo}';
+            final imgUrl = 'http://10.0.2.2:8080/file/img/${card.imgNo}';
 
             return Container(
               height: MediaQuery.of(context).size.height,
@@ -157,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Positioned(
                     bottom: 0,
                     child: Container(
-                      height: MediaQuery.of(context).size.height * 0.2,
+                      height: MediaQuery.of(context).size.height * 0.4,
                       width: MediaQuery.of(context).size.width,
                       color: Colors.white,
                       padding: const EdgeInsets.all(16.0),
@@ -212,6 +221,33 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: TextStyle(
                               color: Colors.black,
                             ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            '덧글:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          for (var comment in card.comments ?? [])
+                            Text(
+                              '- $comment',
+                              style: TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                          TextField(
+                            controller: _commentControllers[index],
+                            decoration: InputDecoration(
+                              labelText: '덧글을 입력하세요',
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              addComment(index, _commentControllers[index]!.text);
+                            },
+                            child: Text('덧글 추가'),
                           ),
                         ],
                       ),
