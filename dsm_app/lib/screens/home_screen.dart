@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dsm_app/models/reply.dart';
 import 'package:dsm_app/models/starcard.dart';
 import 'package:dsm_app/provider/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> fetchStarCards() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8080/starCard/List'),
+      Uri.parse('http://localhost:8080/starCard/List'),
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -69,14 +70,48 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> addComment(int index, String comment) async {
-    // 서버로 덧글을 보내는 로직을 구현해야 합니다.
-    // 현재는 콘솔에 덧글을 출력하고 카드의 덧글 리스트에 추가합니다.
-    print('Adding comment to card $index: $comment');
+    final card = starCards[index];
+    final response = await http.post(
+      Uri.parse('http://localhost:8080/reply'),
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $jwtToken',
+      },
+      body: jsonEncode({
+        'userNo': card.userNo,
+        'starNo': card.starNo,
+        'parentNo': 0,  // Assuming it's a root comment
+        'writer': card.writer,
+        'content': comment,
+      }),
+    );
 
-    setState(() {
-      starCards[index].comments?.add(comment);
-      _commentControllers[index]?.clear();
-    });
+    if (response.statusCode == 201) {
+      // Add comment and reload comments
+      setState(() {
+        _commentControllers[index]?.clear();
+      });
+      // Fetch comments again after adding a comment
+      await fetchComments(card.starNo ?? 0);
+    } else {
+      print('Failed to add comment');
+    }
+  }
+
+  Future<List<Reply>> fetchComments(int starNo) async {
+    final response = await http.get(
+      Uri.parse('http://localhost:8080/reply/$starNo'),
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> data = json.decode(utf8.decode(response.bodyBytes))['replyList'];
+      return data.map((item) => Reply.fromJson(item as Map<String, dynamic>)).toList();
+    } else {
+      throw Exception('Failed to load comments');
+    }
   }
 
   @override
@@ -103,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 userProvider.isLogin
                     ? PopupMenuButton<String>(
                         icon: CircleAvatar(
-                          backgroundImage: NetworkImage('http://10.0.2.2:8080/file/img/1'),
+                          backgroundImage: NetworkImage('http://localhost:8080/file/img/1'),
                         ),
                         onSelected: (value) {
                           if (value == 'logout') {
@@ -149,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
           itemCount: starCards.length,
           itemBuilder: (context, index) {
             final card = starCards[index];
-            final imgUrl = 'http://10.0.2.2:8080/file/img/${card.imgNo}';
+            final imgUrl = 'http://localhost:8080/file/img/${card.imgNo}';
 
             return Container(
               height: MediaQuery.of(context).size.height,
@@ -201,8 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(
                                 color: Colors.black,
                               ),
-                            ),
-                            SizedBox(height: 8),
+                            ),                            SizedBox(height: 8),
                             Text(
                               '수정일: ${card.updDate?.toLocal().toString().split(' ')[0] ?? '수정일 없음'}',
                               style: TextStyle(
@@ -231,13 +265,31 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.black,
                               ),
                             ),
-                            for (var comment in card.comments ?? [])
-                              Text(
-                                '- $comment',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                ),
-                              ),
+                            FutureBuilder<List<Reply>>(
+                              future: fetchComments(card.starNo ?? 0),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  return CircularProgressIndicator();
+                                } else if (snapshot.hasError) {
+                                  return Text('Error: ${snapshot.error}');
+                                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                  return Text('No comments found');
+                                } else {
+                                  final comments = snapshot.data!;
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: comments.map((comment) {
+                                      return Text(
+                                        '- ${comment.content} (작성자: ${comment.writer})',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  );
+                                }
+                              },
+                            ),
                             Row(
                               children: [
                                 Expanded(
@@ -251,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 SizedBox(width: 8),
                                 ElevatedButton(
                                   onPressed: () {
-                                    addComment(index, _commentControllers[index]!.text);
+                                    addComment(index, _commentControllers[index]?.text ?? '');
                                   },
                                   child: Text('등록'),
                                 ),
@@ -292,3 +344,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+                           
