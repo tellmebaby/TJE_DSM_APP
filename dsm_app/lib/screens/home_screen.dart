@@ -170,86 +170,95 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: MediaQuery.of(context).size.width,
                       color: Colors.white,
                       padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '제목: ${card.title ?? '제목 없음'}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            '작성자: ${card.writer ?? '작성자 없음'}',
-                            style: TextStyle(
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            '내용: ${card.content ?? '내용 없음'}',
-                            style: TextStyle(
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            '등록일: ${card.regDate?.toLocal().toString().split(' ')[0] ?? '등록일 없음'}',
-                            style: TextStyle(
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            '수정일: ${card.updDate?.toLocal().toString().split(' ')[0] ?? '수정일 없음'}',
-                            style: TextStyle(
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            '조회수: ${card.views ?? 0}',
-                            style: TextStyle(
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            '좋아요: ${card.likes ?? 0}',
-                            style: TextStyle(
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            '덧글:',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          for (var comment in card.comments ?? [])
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              '- $comment',
+                              '제목: ${card.title ?? '제목 없음'}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              '작성자: ${card.writer ?? '작성자 없음'}',
                               style: TextStyle(
                                 color: Colors.black,
                               ),
                             ),
-                          TextField(
-                            controller: _commentControllers[index],
-                            decoration: InputDecoration(
-                              labelText: '덧글을 입력하세요',
+                            SizedBox(height: 8),
+                            Text(
+                              '내용: ${card.content ?? '내용 없음'}',
+                              style: TextStyle(
+                                color: Colors.black,
+                              ),
                             ),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              addComment(index, _commentControllers[index]!.text);
-                            },
-                            child: Text('덧글 추가'),
-                          ),
-                        ],
+                            SizedBox(height: 8),
+                            Text(
+                              '등록일: ${card.regDate?.toLocal().toString().split(' ')[0] ?? '등록일 없음'}',
+                              style: TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              '수정일: ${card.updDate?.toLocal().toString().split(' ')[0] ?? '수정일 없음'}',
+                              style: TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              '조회수: ${card.views ?? 0}',
+                              style: TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              '좋아요: ${card.likes ?? 0}',
+                              style: TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              '덧글:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            for (var comment in card.comments ?? [])
+                              Text(
+                                '- $comment',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                ),
+                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _commentControllers[index],
+                                    decoration: InputDecoration(
+                                      labelText: '덧글을 입력하세요',
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    addComment(index, _commentControllers[index]!.text);
+                                  },
+                                  child: Text('등록'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
