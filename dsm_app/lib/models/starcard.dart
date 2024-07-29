@@ -1,4 +1,3 @@
-// starcard.dart
 class StarCard {
   int? starNo;
   String? title;
@@ -25,6 +24,7 @@ class StarCard {
   int? starPrice;
   dynamic action;
   dynamic icons;
+  List<String>? comments;  // 수정된 부분
 
   StarCard({
     this.starNo,
@@ -52,6 +52,7 @@ class StarCard {
     this.starPrice,
     this.action,
     this.icons,
+    this.comments,  // 수정된 부분
   });
 
   factory StarCard.fromJson(Map<String, dynamic> json) {
@@ -81,6 +82,38 @@ class StarCard {
       starPrice: json['starPrice'],
       action: json['action'],
       icons: json['icons'],
+      comments: json['comments'] != null ? List<String>.from(json['comments']) : [],  // 수정된 부분
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'starNo': starNo,
+      'title': title,
+      'writer': writer,
+      'content': content,
+      'regDate': regDate?.toIso8601String(),
+      'updDate': updDate?.toIso8601String(),
+      'views': views,
+      'userNo': userNo,
+      'payNo': payNo,
+      'likes': likes,
+      'status': status,
+      'card': card,
+      'category1': category1,
+      'category2': category2,
+      'koreaCategory2': koreaCategory2,
+      'type': type,
+      'startDate': startDate?.toIso8601String(),
+      'endDate': endDate?.toIso8601String(),
+      'imgNo': imgNo,
+      'commentCount': commentCount,
+      'likes_chk': likesChk,
+      'userImgId': userImgId,
+      'starPrice': starPrice,
+      'action': action,
+      'icons': icons,
+      'comments': comments,  // 수정된 부분
+    };
   }
 }
